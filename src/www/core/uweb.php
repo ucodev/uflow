@@ -1,15 +1,54 @@
 <?php
 
-class UW_Config {
+class UW_Base {
+	public function base_dir() {
+		return '';
+	}
+}
+
+class UW_Config extends UW_Base {
+	private $_session_id = null;
+	private $_session_data = array();
 	private $_use_session = false;
 	private $_use_cookies_encrypted = false;
 
+	private function _session_data_serialize() {
+		session_start();
+
+		/* TODO: Encrypt session data if _session_cookies_encrypted are enabled */
+
+		$_SESSION['data'] = json_encode($this->_session_data);
+
+		session_write_close();
+	}
+
+	public function __construct() {
+		if (session_status() == PHP_SESSION_DISABLED) {
+			header("HTTP/1.1 403 Forbbiden");
+			die("PHP Sessions are disabled.");
+		}
+
+		ob_start();
+
+		session_start();
+
+		$this->_session_id = session_id();
+
+		/* TODO: Decrypt session data if _session_cookies_encrypted are enabled */
+
+		$this->_session_data = json_decode($_SESSION['data'], true);
+
+		session_write_close();
+	}
+
 	public function set_session($variable, $value) {
-		//$this->_use_session = $state;
+		$this->_session_data[$variable] = $value;
+
+		$this->_session_data_serialize();
 	}
 
 	public function get_session($variable) {
-		//return $this->_use_session;
+		return $this->_session_data[$variable];
 	}
 
 	public function set_cookies_encrypted($state = false) {
@@ -21,11 +60,27 @@ class UW_Config {
 	}
 }
 
+class UW_Database extends UW_Base {
+}
+
+class UW_View extends UW_Base {
+	public function load($file, $data) {
+		extract($data, EXTR_PREFIX_SAME, "wddx");
+		unset($data);
+
+		include($this->base_dir() . '/views/' . $file . '.php');
+	}
+}
+
 class UW_Core {
 	public $config = null;
+	public $db = null;
+	public $view = null;
 
 	public function __construct() {
 		$this->config = new UW_Config;
+		$this->db = new UW_Database;
+		$this->view = new UW_View;
 	}
 }
 
