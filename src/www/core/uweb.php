@@ -1,7 +1,16 @@
 <?php
 
+/* Author: Pedro A. Hortas
+ * Email: pah@ucodev.org
+ * Date: 24/09/2014
+ */
+
 class UW_Base {
 	public function base_dir() {
+		return '';
+	}
+
+	public function base_url() {
 		return '';
 	}
 }
@@ -36,7 +45,8 @@ class UW_Config extends UW_Base {
 
 		/* TODO: Decrypt session data if _session_cookies_encrypted are enabled */
 
-		$this->_session_data = json_decode($_SESSION['data'], true);
+		if (array_key_exists('data', $_SESSION))
+			$this->_session_data = json_decode($_SESSION['data'], true);
 
 		session_write_close();
 	}
@@ -62,6 +72,7 @@ class UW_Config extends UW_Base {
 
 class UW_Database extends UW_Base {
 	/* TODO: */
+	private $_db = null;
 }
 
 class UW_View extends UW_Base {
@@ -69,7 +80,7 @@ class UW_View extends UW_Base {
 		extract($data, EXTR_PREFIX_SAME, "wddx");
 		unset($data);
 
-		include($this->base_dir() . '/views/' . $file . '.php');
+		include('views/' . $file . '.php');
 	}
 }
 
